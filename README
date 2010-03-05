@@ -1,0 +1,18 @@
+= drbservice
+
+DRbservice provides a framework for creating a DRb service that uses an SSL-encrypted channel
+and authentication with a minimum of effort, along with a tool that can easily set up the
+service in an environment intended to be run via one of several different deployment strategies. 
+
+You can check out the current development source with Mercurial like so:
+
+    hg clone http://repo.deveiate.org/drbservice
+
+You can submit bug reports, suggestions, and read more about future plans at the
+project page:
+
+    http://deveiate.org/drbservice.html
+
+== License
+
+See the included LICENSE file for licensing details.
