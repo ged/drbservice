@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'pathname'
 require 'drb'
 require 'drb/ssl'
 require 'openssl'
@@ -7,7 +8,7 @@ require 'openssl'
 require 'treequel'
 
 
-URI = "drbssl://localhost:8484"
+SERVICE_URI = "drbssl://localhost:8484"
 
 EXPDIR = Pathname( __FILE__ ).dirname
 KEYFILE = EXPDIR + 'key.pem'
@@ -17,9 +18,9 @@ SSL_CONFIG     = {
 	:C            => 'US',
 	:ST           => 'Oregon',
 	:L            => 'Portland',
-	:O            => 'ACME, Inc.',
-	:CN           => 'services.acme.com',
-	:emailAddress => 'it@acme.com',
+	:O            => 'LAIKA, Inc.',
+	:CN           => 'services.laika.com',
+	:emailAddress => 'it@lists.laika.com',
 }
 
 class Service
@@ -42,8 +43,6 @@ class AuthWrapperObject
 	include DRbUndumped
 
 	def initialize
-		raise "Can't instantiate AuthWrapperObject directly: please subclass it" if
-			self.instance_of?( AuthWrapperObject )
 		@ldap = Treequel.directory( 'ldap://ldap.laika.com/dc=laika,dc=com' )
 		@people = @ldap.ou( :people )
 		@serviceobject = nil
@@ -55,7 +54,7 @@ class AuthWrapperObject
 	def authenticate( uid, password )
 		person = @people.uid( uid )
 		begin
-			@ldap.bind_as( person, password ) do
+			@ldap.bound_as( person, password ) do
 				yield Service.new
 			end
 		rescue => err
@@ -69,14 +68,17 @@ end # class AuthWrapperObject
 
 cert = key = nil
 
-unless CERTFILE.exist? && KEYFILE.exist?
+unless KEYFILE.exist?
 	$stderr.print "Generating server cert..."
 	key = OpenSSL::PKey::RSA.new( 2048 ){ $stderr.print "." }
 	$stderr.puts
 	KEYFILE.open( File::WRONLY|File::CREAT|File::EXCL, 0600 ) do |fh|
 		fh.print( key.to_pem )
 	end
+end
+key  ||= OpenSSL::PKey::RSA.new( KEYFILE.read )
 
+unless CERTFILE.exist?
 	name = OpenSSL::X509::Name.new( SSL_CONFIG.to_a )
 
 	cert = OpenSSL::X509::Certificate.new
@@ -94,19 +96,18 @@ unless CERTFILE.exist? && KEYFILE.exist?
 		ef.create_extension( "subjectKeyIdentifier","hash" ),
 		ef.create_extension( "extendedKeyUsage","serverAuth" ),
 		ef.create_extension( "keyUsage", "keyEncipherment,dataEncipherment,digitalSignature" ),
-		ef.create_extension("authorityKeyIdentifier", "keyid:always,issuer:always")
 	]
 
 	ef.issuer_certificate = cert
 
 	cert.sign( key, OpenSSL::Digest::SHA1.new )
+	cert.extensions << ef.create_extension( "authorityKeyIdentifier", "keyid:always,issuer:always" )
+
 	CERTFILE.open( File::WRONLY|File::CREAT|File::EXCL, 0644 ) do |fh|
 		fh.print( cert.to_pem )
 	end
 end
-
 cert ||= OpenSSL::X509::Certificate.new( CERTFILE.read )
-key  ||= OpenSSL::PKey::RSA.new( KEYFILE.read )
 
 
 config = {
@@ -114,7 +115,7 @@ config = {
 	:SSLCertificate => cert,
 }
 
-DRb.start_service( URI, AuthWrapperObject.new, config )
+DRb.start_service( SERVICE_URI, AuthWrapperObject.new, config )
 DRb.thread.join
 
 
