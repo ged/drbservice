@@ -4,11 +4,11 @@ Feature: A basic DRb service
 	In order to create a new basic service
 	As a programmer
 	I want to be able to just define the service object
-		and have the rest of the setup and running of the service taken care of for me
+		And have it wrapped in authentication and SSL
 
 	Scenario: 
-	    Given context
-	    When event
+	    Given a basic service with a guarded "testme" method that returns "success"
+	    When I 
 	    Then outcome
 	
 	
