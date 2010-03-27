@@ -85,9 +85,9 @@ class Service
 	#########
 
 	def method_missing( sym, *args )
-		return super unless body = self.class.real_method( sym ).clone
+		return super unless body = self.class.real_method( sym )
 		raise SecurityError, "not authenticated" unless self.authenticated
-		return body.bind( self ).call( *args )
+		return body.clone.bind( self ).call( *args )
 	end
 
 end # class Service
