@@ -23,7 +23,7 @@ describe DRb::DRbAuthenticatedSSLSocket do
 
 
 	before( :all ) do
-		setup_logging( :debug )
+		setup_logging( :fatal )
 	end
 
 	describe "URI parsing method" do

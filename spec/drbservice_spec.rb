@@ -27,10 +27,46 @@ describe DRbService do
 		setup_logging( :fatal )
 	end
 
+
+	it "is always an 'undumped' service object" do
+		testclass = Class.new( DRbService )
+		testclass.should include( DRbUndumped )
+	end
+
 	it "doesn't allow instances to be created of itself" do
 		expect {
 			DRbService.new
 		}.should raise_exception( ScriptError, /can't instantiate/ )
+	end
+
+	it "obscures instance methods declared by subclasses by default" do
+		testclass = Class.new( DRbService ) do
+			def do_some_stuff; return "Yep."; end
+		end
+		testclass.new.should_not respond_to( :do_some_stuff )
+	end
+
+
+	it "provides an 'unguarded' declarative to define instance methods that can " +
+	   "be used without authentication" do
+		testclass = Class.new( DRbService ) do
+			unguarded do
+				def do_some_stuff; return "Yep."; end
+			end
+		end
+		testclass.new.should respond_to( :do_some_stuff )
+	end
+
+
+	it "provides a .start class method that does the necessary DRb setup and runs the service" do
+		serviceclass = Class.new( DRbService )
+		thread = mock( "drb service thread" )
+
+ 		DRb.should_receive( :start_service ).with( SERVICE_URI, an_instance_of(serviceclass), {} )
+		DRb.should_receive( :thread ).and_return( thread )
+		thread.should_receive( :join )
+
+		serviceclass.start( SERVICE_URI )
 	end
 
 

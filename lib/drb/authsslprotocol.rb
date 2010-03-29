@@ -31,6 +31,21 @@ module DRb
 			return [ uri.host, uri.port.to_i, uri.query ]
 		end
 
+
+		### Open a client connection to the server at +uri+, using configuration 
+		### +config+.  Return a protocol instance for this connection.
+		def self::open( uri, config )
+			host, port, option = self.parse_uri( uri )
+			host.untaint
+			port.untaint
+			soc = TCPSocket.open( host, port )
+			ssl_conf = DRb::DRbSSLSocket::SSLConfig.new( config )
+			ssl_conf.setup_ssl_context
+			ssl = ssl_conf.connect( soc )
+			self.new( uri, ssl, ssl_conf, true )
+		end
+
+
 	end # class DRbAuthenticatedSSLSocket
 
 
