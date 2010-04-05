@@ -3,8 +3,6 @@
 require 'drb'
 require 'drb/ssl'
 
-require 'digest/sha1'
-
 
 # A base class for DRb-based services.
 
@@ -19,6 +17,11 @@ class DRbService
 	# Version-control revision
 	REVISION = %$Rev$
 
+	# The default path to the service cert, relative to the current directory
+	DEFAULT_CERTNAME = 'service-cert.pem'
+
+	# The default path to the service key, relative to the current directory
+	DEFAULT_KEYNAME = 'service-key.pem'
 
 
 	# The container for obscured methods
@@ -29,14 +32,21 @@ class DRbService
 	###	C L A S S   M E T H O D S
 	#################################################################
 
-	### Start the DRbService at the given +uri+ and join on its thread.
-	def self::start( uri, config={} )
+	### Start the DRbService at the given +ip+ and +port+.
+	def self::start( ip, port, sslcert=DEFAULT_CERTNAME, sslkey=DEFAULT_KEYNAME )
 		frontobj = self.new
-		$SAFE = 1
-		DRbService.log.info "Starting %p as a DRbService at %s with config: %p" % [ self, uri, config ]
-		DRb.start_service( uri, frontobj, config )
+		uri = "drbssl://#{ip}:#{port}"
+		config = {
+			:safe_level     => 1,
+			:verbose        => true,
+	        :SSLCertificate => sslcert,
+	        :SSLPrivateKey  => sslkey,
+		}
+
+		DRbService.log.info "Starting %p as a DRbService at %s" % [ self, uri ]
+		server = DRb::DRbServer.new( uri, frontobj, config )
 		DRbService.log.debug "  started. Joining the DRb thread."
-		DRb.thread.join
+		server.thread.join
 	end
 
 
@@ -73,24 +83,13 @@ class DRbService
 	end
 
 
-	### Set a password for the service. If you don't specify a password, even guarded
-	### methods can be accessed. With a password set, the remote side can still call
-	### unguarded methods, but all other methods will be hidden.
-	def self::service_password( password )
-		DRbService.log.debug "Setting encrypted password for %p to "
-		self.password_digest = Digest::SHA1.hexdigest( password )
-	end
-
-
 	### Class accessors
 	class << self
+
 		# The unguarded mode flag -- instance methods defined while this flag is set
 		# will not be hidden
 		attr_accessor :unguarded_mode
 
-		# The SHA1 digest of the service password -- if nil, the service will not require
-		# authentication
-		attr_accessor :password_digest
 	end
 
 
@@ -115,31 +114,17 @@ class DRbService
 
 	### Returns +true+ if the client has successfully authenticated.
 	def authenticated?
-		return (self.class.password_digest.nil? || @authenticated) ? true : false
+		return @authenticated ? true : false
 	end
 
 
- 	### Authenticate using the specified +password+, calling the provided block if 
-	### authentication succeeds. Raises a SecurityError if authentication fails. If
-	### no password is set, the block is called regardless of what the +password+ is.
-	def authenticate( password )
-		if digest = self.class.password_digest
-			if Digest::SHA1.hexdigest( password ) == digest
-				self.log.info "authentication successful"
-				@authenticated = true
-				yield
-			else
-				self.log.error "authentication failure"
-				raise SecurityError, "authentication failure"
-			end
-		else
-			self.log.info "ignoring authentication to an unguarded service"
-			yield
-		end
-	ensure
-		@authenticated = false
+	### Default authentication implementation -- always fails. You'll need to include
+	### one of the authentication modules or provide your own #authenticate method in
+	### your subclass.
+	def authenticate( *args )
+		self.log.error "authentication failure (fallback method)"
+		raise SecurityError, "authentication failure"
 	end
-
 
 
 	#########

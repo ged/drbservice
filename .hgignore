@@ -1,1 +1,3 @@
 experiments/.*\.pem
+^(ssl|drb)\.rb$
+^commit\-msg\.txt$

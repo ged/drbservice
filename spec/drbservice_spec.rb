@@ -12,19 +12,21 @@ BEGIN {
 require 'spec'
 require 'spec/lib/helpers'
 
+require 'uri'
 require 'drbservice'
 
 
 describe DRbService do
 	include DRbService::SpecHelpers
 
-	SERVICE_URI = "drbssl://localhost:8484"
-
-	TEST_PASSWORD = 'hungerlumpkins'
-
+	SERVICE_URI = URI( "drbssl://localhost:8484" )
 
 	before( :all ) do
 		setup_logging( :fatal )
+	end
+
+	after( :all ) do
+		reset_logging()
 	end
 
 
@@ -58,18 +60,6 @@ describe DRbService do
 	end
 
 
-	it "provides a .start class method that does the necessary DRb setup and runs the service" do
-		serviceclass = Class.new( DRbService )
-		thread = mock( "drb service thread" )
-
- 		DRb.should_receive( :start_service ).with( SERVICE_URI, an_instance_of(serviceclass), {} )
-		DRb.should_receive( :thread ).and_return( thread )
-		thread.should_receive( :join )
-
-		serviceclass.start( SERVICE_URI )
-	end
-
-
 	describe "subclass" do
 
 		it "is an 'undumped' service objects" do
@@ -98,26 +88,27 @@ describe DRbService do
 
 		it "has a .start class method that does the necessary DRb setup and runs the service" do
 			serviceclass = Class.new( DRbService )
+			drbserver = mock( "drb server" )
 			thread = mock( "drb service thread" )
 
-	 		DRb.should_receive( :start_service ).with( SERVICE_URI, an_instance_of(serviceclass), {} )
-			DRb.should_receive( :thread ).and_return( thread )
+			expected_config = {
+				:SSLCertificate => "service-cert.pem",
+				:SSLPrivateKey  => "service-key.pem",
+				:safe_level     => 1,
+				:verbose        => true,
+			}
+
+	 		DRb::DRbServer.should_receive( :new ).
+				with( SERVICE_URI.to_s, an_instance_of(serviceclass), expected_config ).
+				and_return( drbserver )
+			drbserver.should_receive( :thread ).and_return( thread )
 			thread.should_receive( :join )
 
-			serviceclass.start( SERVICE_URI )
+			serviceclass.start( SERVICE_URI.host, SERVICE_URI.port )
 		end
 
 
-		it "can use a declarative to set a password for the service" do
-			serviceclass = Class.new( DRbService ) do
-				def do_some_stuff; return "Yep."; end
-				service_password TEST_PASSWORD
-			end
-			serviceclass.password_digest.should == Digest::SHA1.hexdigest( TEST_PASSWORD )
-		end
-
-
-		describe "instances without a password set" do
+		describe "instances without an authentication strategy mixed in" do
 
 			before( :all ) do
 				@serviceclass = Class.new( DRbService ) do
@@ -133,84 +124,14 @@ describe DRbService do
 			end
 
 
-			it "accepts anything for authentication without raising an exception" do
-				block_called = false
-				@serviceobj.authenticate( '' ) do
-					block_called = true
-				end
-				block_called.should == true
-			end
-
-			it "allows access to guarded methods before authenticating" do
-				@serviceobj.do_some_guarded_stuff.should == 'Ronk.'
-			end
-
-			it "allows access to guarded methods after authenticating" do
-				@serviceobj.authenticate( 'anything' ) do
-					@serviceobj.do_some_guarded_stuff.should == 'Ronk.'
-				end
-			end
-
-			it "allows access to unguarded methods before authenticating" do
-				@serviceobj.do_some_unguarded_stuff.should == 'Adonk.'
-			end
-
-			it "allows access to unguarded methods after authenticating" do
-				@serviceobj.authenticate( 'anything' ) do
-					@serviceobj.do_some_unguarded_stuff.should == 'Adonk.'
-				end
-			end
-
-		end
-
-
-		describe "instances with a password set" do
-
-			before( :each ) do
-				@serviceclass = Class.new( DRbService ) do
-					service_password TEST_PASSWORD
-					def do_some_guarded_stuff; return "Ronk."; end
-					unguarded do
-						def do_some_unguarded_stuff; return "Adonk."; end
-					end
-				end
-			end
-
-			before( :each ) do
-				@serviceobj = @serviceclass.new
-			end
-
-
-			it "raises an exception without calling the block on failed authentication" do
-				block_called = false
+			it "raises an exception when #authenticate is called" do
 				expect {
-					@serviceobj.authenticate( '' ) do
-						block_called = true
-					end
-				}.should raise_exception( SecurityError, /authentication failure/i )
-				block_called.should == false
+					@serviceobj.authenticate( '' )
+				}.to raise_exception( SecurityError, /authentication failure/i )
 			end
 
-			it "doesn't allow access to guarded methods before authenticating" do
-				expect {
-					@serviceobj.do_some_guarded_stuff
-				}.to raise_exception( SecurityError, /not authenticated/i )
-			end
-
-			it "allows access to guarded methods after authenticating successfully" do
-				@serviceobj.authenticate( TEST_PASSWORD ) do
-					@serviceobj.do_some_guarded_stuff.should == 'Ronk.'
-				end
-			end
-
-			it "allows access to unguarded methods before authenticating" do
+			it "allows access to unguarded methods without authenticating" do
 				@serviceobj.do_some_unguarded_stuff.should == 'Adonk.'
-			end
-
-			it "allows access to unguarded methods after authenticating" do
-				@serviceobj.authenticate( TEST_PASSWORD ) do
-					@serviceobj.do_some_unguarded_stuff.should == 'Adonk.'
-				end
 			end
 
 		end
