@@ -113,7 +113,12 @@ describe DRbService do
 			before( :all ) do
 				@serviceclass = Class.new( DRbService ) do
 					def do_some_guarded_stuff; return "Ronk."; end
+
 					unguarded do
+						def make_authenticated
+							self.log.debug "Making it authenticated!"
+							@authenticated = true
+						end
 						def do_some_unguarded_stuff; return "Adonk."; end
 					end
 				end
@@ -132,6 +137,19 @@ describe DRbService do
 
 			it "allows access to unguarded methods without authenticating" do
 				@serviceobj.do_some_unguarded_stuff.should == 'Adonk.'
+			end
+
+			it "knows whether the user is authenticated or not" do
+				@serviceobj.should_not be_authenticated()
+				@serviceobj.make_authenticated
+				@serviceobj.should be_authenticated()
+			end
+
+			it "knows whether the user is authorized or not; in the base class authentication " +
+			   "is sufficient for authorization as well" do
+				@serviceobj.should_not be_authorized()
+				@serviceobj.make_authenticated
+				@serviceobj.should be_authorized()
 			end
 
 		end

@@ -1,3 +1,6 @@
 experiments/.*\.pem
 ^(ssl|drb)\.rb$
 ^commit\-msg\.txt$
+^\.yardoc/
+^docs/api/
+^ChangeLog$

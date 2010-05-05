@@ -90,21 +90,35 @@ module DRbService::LDAPAuthentication
 	### no password is set, the block is called regardless of what the +password+ is.
 	def authenticate( user, password )
 		uri = self.class.ldap_uri
+		self.log.debug "Connecting to %p for authentication" % [ uri ]
 		directory = Treequel.directory( uri )
-		user_branch = self.find_auth_user( directory, user )
+		self.log.debug "  finding LDAP record for: %p" % [ user ]
+		user_branch = self.find_auth_user( directory, user ) or
+			return super
 
-		directory.bound_as( user_branch, password ) do
-			@authenticated = true
-			if @ldap_authz_callback
-				yield if self.call_authz_callback( user_branch, directory )
-			else
-				yield
+		self.log.debug "  binding as %p" % [ user, user_branch ]
+		directory.bind_as( user_branch, password )
+		self.log.debug "  bound successfully..."
+		@authenticated = true
+
+		if cb = self.class.ldap_authz_callback
+			self.log.debug "  calling authorization callback..."
+
+			unless self.call_authz_callback( cb, user_branch, directory )
+				msg = "  authorization failed for: %s" % [ user_branch ]
+				self.log.debug( msg )
+				raise SecurityError, msg
 			end
+
+			self.log.debug "  authorization succeeded."
 		end
 
-		# If the block exits and authenticated isn't still set, then
-		# authentication failed.
-		super unless @authenticated
+		yield
+
+	rescue LDAP::ResultError => err
+		self.log.error "  authentication failed for %p" % [ user_branch || user ]
+		raise SecurityError, "authentication failure"
+
 	ensure
 		@authenticated = false
 	end
@@ -114,31 +128,53 @@ module DRbService::LDAPAuthentication
 	protected
 	#########
 
-	### Find the specified +user+ entry in the given +directory+ and return a 
-	### Treequel::Branch for it.
-	def find_auth_user( directory, user )
+	### Find the specified +username+ entry in the given +directory+.
+	### 
+	### @param [Treequel::Directory] directory  the directory to search
+	### @param [String] username                the name to use in the search
+	### 
+	### @return [Treequel::Branch, nil]  the first found user, if one was found
+	def find_auth_user( directory, username )
+		self.log.debug "Finding the user to bind as."
+
 		if dnpattern = self.class.ldap_dn
-			dn = dnpattern % [ user ]
-			return Treequel::Branch.new( directory, dn )
+			self.log.debug "  using DN pattern %p" % [ dnpattern ]
+			dn = dnpattern % [ username ]
+			user = Treequel::Branch.new( directory, dn )
+			return user.exists? ? user : nil
+
 		else
 			dnsearch = self.class.ldap_dn_search
 			usersearch = dnsearch[:base] ?
 				Treequel::Branch.new( directory, dnsearch[:base] ) :
 				directory.base
 			usersearch = usersearch.scope( dnsearch[:scope] ) if dnsearch[:scope]
-			return usersearch.filter( dnsearch[:filter] % [user] ).first
+			usersearch = usersearch.filter( dnsearch[:filter] % [username] )
+
+			self.log.debug "  using filter: %s" % [ usersearch ]
+			if user = usersearch.first
+				self.log.debug "    search found: %s" % [ user ]
+				return user
+			else
+				self.log.error "    search returned no entries" % [ usersearch ]
+				return nil
+			end
 		end
+
 	end
 
 
 	### Call the authorization callback with the given +user+ and +directory+ and
 	### return true if it indicates authorization was successful. 
-	def call_authz_callback( user, directory )
-		if @ldap_authz_callback.respond_to?( :call )
-			return true if @ldap_authz_callback.call( user, directory )
-		else callback = self.method( @ldap_authz_callback )
+	def call_authz_callback( callback, user, directory )
+
+		if callback.respond_to?( :call )
+			return true if callback.call( user, directory )
+
+		else callback = self.method( callback )
 			return true if callback.call( user, directory )
 		end
+
 	end
 
 end # DRbService::LDAPAuthentication

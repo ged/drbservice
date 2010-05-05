@@ -5,7 +5,9 @@ require 'drb/ssl'
 
 
 # A base class for DRb-based services.
-
+# @abstract Concrete subclasses must provide define the service API by declaring 
+#   public methods. Methods declared outside of a .unguarded block will be obscured
+#   before the client authenticates.
 class DRbService
 	require 'drbservice/utils'
 	include DRbUndumped,
@@ -25,7 +27,9 @@ class DRbService
 
 
 	# The container for obscured methods
-	@@real_methods = {}
+	class << self
+		attr_reader :real_methods
+	end
 
 
 	#################################################################
@@ -33,6 +37,11 @@ class DRbService
 	#################################################################
 
 	### Start the DRbService at the given +ip+ and +port+.
+	### @param [String] ip       the ip to bind to
+	### @param [Fixnum] port     the port to listen on
+	### @param [String] sslcert  the name of the server's SSL certificate file
+	### @param [String] sslkey   the name of the server's SSL key file
+	### @return [void]
 	def self::start( ip, port, sslcert=DEFAULT_CERTNAME, sslkey=DEFAULT_KEYNAME )
 		frontobj = self.new
 		uri = "drbssl://#{ip}:#{port}"
@@ -51,6 +60,8 @@ class DRbService
 
 
 	### Obscure any instance method added while not in 'unguarded' mode.
+	### @param [Symbol] meth  the name of the method being added
+	### @return [void]
 	def self::method_added( meth )
 		super
 		unless self == ::DRbService || meth.to_sym == :initialize
@@ -58,23 +69,27 @@ class DRbService
 				DRbService.log.debug "Not obscuring %p#%s: unguarded mode." % [ self, meth ]
 			else
 				DRbService.log.debug "Obscuring %p#%s." % [ self, meth ]
-				@@real_methods[ self ] ||= {}
-				@@real_methods[ self ][ meth.to_sym ] = self.instance_method( meth )
+				@real_methods ||= {}
+				@real_methods[ meth.to_sym ] = self.instance_method( meth )
 				remove_method( meth )
 			end
 		end
 	end
 
 
-	### Add a per-class 'unguarded mode' flag to subclasses.
+	### Inheritance callback: Add a per-class 'unguarded mode' flag to subclasses.
+	### @param [Class] subclass  the inheriting subclass
+	### @return [void]
 	def self::inherited( subclass )
-		super
+		self.log.debug "Setting @unguarded_mode in %p" % [ subclass ]
 		subclass.instance_variable_set( :@unguarded_mode, false )
+		super
 	end
 
 
 	### Declare some service methods that can be called without authentication in
 	### the provided block.
+	### @return [void]
 	def self::unguarded
 		self.unguarded_mode = true
 		yield
@@ -83,11 +98,20 @@ class DRbService
 	end
 
 
+	### Return the library's version string
+	def self::version_string( include_buildnum=false )
+		vstring = "%s %s" % [ self.name, VERSION ]
+		vstring << " (build %s)" % [ REVISION[/.*: ([[:xdigit:]]+)/, 1] || '0' ] if include_buildnum
+		return vstring
+	end
+
+
 	### Class accessors
 	class << self
 
 		# The unguarded mode flag -- instance methods defined while this flag is set
 		# will not be hidden
+		# @return [Boolean] 
 		attr_accessor :unguarded_mode
 
 	end
@@ -98,6 +122,7 @@ class DRbService
 	#################################################################
 
 	### Create a new instance of the service.
+	### @raise [ScriptError] if DRbService is instantiated directory
 	def initialize
 		raise ScriptError,
 			"can't instantiate #{self.class} directly: please subclass it instead" if
@@ -112,9 +137,24 @@ class DRbService
 	public
 	######
 
+	### Return a human-readable representation of the object.
+	def inspect
+		return "#<%s:0x%0x>" % [ self.class, self.__id__ * 2 ]
+	end
+
+
 	### Returns +true+ if the client has successfully authenticated.
 	def authenticated?
 		return @authenticated ? true : false
+	end
+
+
+	### Returns +true+ if the client has successfully authenticated and is authorized 
+	### to use the service. By default, authentication is sufficient for authorization;
+	### to specify otherwise, override this method in your service's subclass or 
+	### include an auth mixin that provides one.
+	def authorized?
+		return self.authenticated?
 	end
 
 
@@ -134,8 +174,8 @@ class DRbService
 	### Handle calls to guarded methods by requiring the authentication flag be
 	### set if there is a password set.
 	def method_missing( sym, *args )
-		return super unless body = @@real_methods[ self.class ][ sym ]
-		if self.authenticated?
+		return super unless body = self.class.real_methods[ sym ]
+		if self.authorized?
 			return body.clone.bind( self ).call( *args )
 		else
 			self.log.error "Guarded method %p called without authentication!" % [ sym ]

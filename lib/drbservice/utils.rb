@@ -8,7 +8,7 @@ require 'date'
 require 'drbservice'
 
 
-class DRbService # :nodoc:
+class DRbService
 
 	### A collection of ANSI color utility functions
 	module ANSIColorUtilities
@@ -314,6 +314,9 @@ class DRbService # :nodoc:
 		  }
 
 
+		### Inclusion callback: Add logging methods and instance variables to
+		### the Module +mod+.
+		### @param [Module] mod  the including Class or Module
 		def self::included( mod )
 
 			# Logging class instance variables

@@ -24,7 +24,7 @@ class HomeDirService < DRbService
 	# Configure LDAP authentication
 	ldap_uri 'ldap://ldap.acme.com/dc=acme,dc=com'
 	ldap_dn_search 'uid=%s',
-		:base => 'ou=employees,dc=laika,dc=com',
+		:base => 'ou=employees,dc=acme,dc=com',
 		:scope => :one
 
 	ldap_authz_callback do |directory, bound_user|
