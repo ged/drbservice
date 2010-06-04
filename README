@@ -8,7 +8,7 @@ via one of several different deployment strategies.
 You can check out the current development source with Mercurial 
 like so:
 
-    hg clone http://repo.deveiate.org/drbservice
+    hg clone http://bitbucket.org/ged/drbservice
 
 You can submit bug reports, suggestions, and read more about future plans at the
 project page:

@@ -14,7 +14,7 @@ class DRbService
 	        DRbService::Logging
 
 	# Library version
-	VERSION = '1.0.0'
+	VERSION = '1.0.1'
 
 	# Version-control revision
 	REVISION = %$Rev$
@@ -45,11 +45,15 @@ class DRbService
 	def self::start( ip, port, sslcert=DEFAULT_CERTNAME, sslkey=DEFAULT_KEYNAME )
 		frontobj = self.new
 		uri = "drbssl://#{ip}:#{port}"
+
+		cert = OpenSSL::X509::Certificate.new( File.read(sslcert) )
+		key  = OpenSSL::PKey::RSA.new( File.read(sslkey) )
+
 		config = {
 			:safe_level     => 1,
 			:verbose        => true,
-	        :SSLCertificate => sslcert,
-	        :SSLPrivateKey  => sslkey,
+	        :SSLCertificate => cert,
+	        :SSLPrivateKey  => key,
 		}
 
 		DRbService.log.info "Starting %p as a DRbService at %s" % [ self, uri ]

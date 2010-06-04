@@ -101,5 +101,5 @@ class HomeDirService < DRbService
 
 end # HomeDirService
 
-RubyVersionService.start( '127.0.0.1', 4848, 'service-cert.pem', 'service-key' )
+HomeDirService.start( '127.0.0.1', 4848, 'service-cert.pem', 'service-key' )
 

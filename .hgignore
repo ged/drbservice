@@ -4,3 +4,5 @@ experiments/.*\.pem
 ^\.yardoc/
 ^docs/api/
 ^ChangeLog$
+^pkg/
+^release\.(notes|ann)$

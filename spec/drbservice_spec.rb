@@ -91,9 +91,18 @@ describe DRbService do
 			drbserver = mock( "drb server" )
 			thread = mock( "drb service thread" )
 
+			File.should_receive( :read ).with( 'service-cert.pem' ).
+				and_return( :cert_data )
+			OpenSSL::X509::Certificate.should_receive( :new ).with( :cert_data ).
+				and_return( :ssl_cert )
+			File.should_receive( :read ).with( 'service-key.pem' ).
+				and_return( :key_data )
+			OpenSSL::PKey::RSA.should_receive( :new ).with( :key_data ).
+				and_return( :ssl_key )
+
 			expected_config = {
-				:SSLCertificate => "service-cert.pem",
-				:SSLPrivateKey  => "service-key.pem",
+				:SSLCertificate => :ssl_cert,
+				:SSLPrivateKey  => :ssl_key,
 				:safe_level     => 1,
 				:verbose        => true,
 			}

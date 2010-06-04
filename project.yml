@@ -18,7 +18,8 @@ project_summary: A tool for easing the creation of SSL-encrypted, authenticated 
 version_file: drbservice.rb
 additional_pkgfiles: []
 
-dev_dependencies: {}
+dev_dependencies: 
+  treequel: >= 1.0.2
 
 authors: 
   Michael Granger: ged@FaerieMUD.org

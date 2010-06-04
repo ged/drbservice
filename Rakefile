@@ -224,6 +224,7 @@ DEVELOPMENT_DEPENDENCIES = {
 	'text-format' => '>= 1.0.0',
 	'tmail'       => '>= 1.2.3.1',
 	'diff-lcs'    => '>= 1.1.2',
+	'treequel' => '>= 1.0.2',
 }
 
 # Non-gem requirements: packagename => version
