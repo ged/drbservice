@@ -19,12 +19,25 @@ class DRbService
 	# Version-control revision
 	REVISION = %$Rev$
 
+	# The default IP address to listen on
+	DEFAULT_IP = '127.0.0.1'
+
+	# The default port to listen on
+	DEFAULT_PORT = 4848
+
 	# The default path to the service cert, relative to the current directory
 	DEFAULT_CERTNAME = 'service-cert.pem'
 
 	# The default path to the service key, relative to the current directory
 	DEFAULT_KEYNAME = 'service-key.pem'
 
+	# The default values for the drbservice config hash
+	DEFAULT_CONFIG = {
+		:ip       => DEFAULT_IP,
+		:port     => DEFAULT_PORT,
+		:certfile => DEFAULT_CERTNAME,
+		:keyfile  => DEFAULT_KEYNAME,
+	}
 
 	# The container for obscured methods
 	class << self
@@ -37,17 +50,20 @@ class DRbService
 	#################################################################
 
 	### Start the DRbService at the given +ip+ and +port+.
-	### @param [String] ip       the ip to bind to
-	### @param [Fixnum] port     the port to listen on
-	### @param [String] sslcert  the name of the server's SSL certificate file
-	### @param [String] sslkey   the name of the server's SSL key file
+	### @param [Hash] config     the service configuration hash
+	### @option config [String]  :ip       the ip to bind to
+	### @option config [Fixnum]  :port     the port to listen on
+	### @option config [String]  :certfile the name of the server's SSL certificate file
+	### @option config [String]  :keyfile  the name of the server's SSL key file
 	### @return [void]
-	def self::start( ip, port, sslcert=DEFAULT_CERTNAME, sslkey=DEFAULT_KEYNAME )
-		frontobj = self.new
-		uri = "drbssl://#{ip}:#{port}"
+	def self::start( config={} )
+		config = DEFAULT_CONFIG.merge( config )
 
-		cert = OpenSSL::X509::Certificate.new( File.read(sslcert) )
-		key  = OpenSSL::PKey::RSA.new( File.read(sslkey) )
+		frontobj = self.new( config )
+		uri = "drbssl://%s:%d" % config.values_at( :ip, :port )
+
+		cert = OpenSSL::X509::Certificate.new( File.read(config[:certfile]) )
+		key  = OpenSSL::PKey::RSA.new( File.read(config[:keyfile]) )
 
 		config = {
 			:safe_level     => 1,
@@ -127,13 +143,11 @@ class DRbService
 
 	### Create a new instance of the service.
 	### @raise [ScriptError] if DRbService is instantiated directory
-	def initialize
+	def initialize( config={} )
 		raise ScriptError,
 			"can't instantiate #{self.class} directly: please subclass it instead" if
 			self.class == DRbService
 		@authenticated = false
-
-		super
 	end
 
 

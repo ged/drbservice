@@ -96,7 +96,7 @@ module DRbService::LDAPAuthentication
 		user_branch = self.find_auth_user( directory, user ) or
 			return super
 
-		self.log.debug "  binding as %p" % [ user, user_branch ]
+		self.log.debug "  binding as %p (%p) with password = %p" % [ user, user_branch, password ]
 		directory.bind_as( user_branch, password )
 		self.log.debug "  bound successfully..."
 		@authenticated = true

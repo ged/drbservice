@@ -113,7 +113,7 @@ describe DRbService do
 			drbserver.should_receive( :thread ).and_return( thread )
 			thread.should_receive( :join )
 
-			serviceclass.start( SERVICE_URI.host, SERVICE_URI.port )
+			serviceclass.start( :ip => SERVICE_URI.host, :port => SERVICE_URI.port )
 		end
 
 
