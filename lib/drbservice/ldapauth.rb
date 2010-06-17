@@ -85,6 +85,22 @@ module DRbService::LDAPAuthentication
 	end
 
 
+	### Set up some instance variables used by the mixin.
+	def initialize( *args )
+		super
+		@authenticated	 = false
+		@authuser		 = nil
+		@authuser_branch = nil
+	end
+
+
+	# @return [String] the username of the authenticated user
+	attr_reader :authuser
+
+	# @return [Treequel::Branch] the branch of the authenticated user
+	attr_reader :authuser_branch
+
+
  	### Authenticate using the specified +password+, calling the provided block if 
 	### authentication succeeds. Raises a SecurityError if authentication fails. If
 	### no password is set, the block is called regardless of what the +password+ is.
@@ -96,9 +112,10 @@ module DRbService::LDAPAuthentication
 		user_branch = self.find_auth_user( directory, user ) or
 			return super
 
-		self.log.debug "  binding as %p (%p) with password = %p" % [ user, user_branch, password ]
+		self.log.debug "  binding as %p (%p)" % [ user, user_branch ]
 		directory.bind_as( user_branch, password )
 		self.log.debug "  bound successfully..."
+
 		@authenticated = true
 
 		if cb = self.class.ldap_authz_callback
@@ -113,6 +130,8 @@ module DRbService::LDAPAuthentication
 			self.log.debug "  authorization succeeded."
 		end
 
+		@authuser = user
+		@authuser_branch = user
 		yield
 
 	rescue LDAP::ResultError => err
@@ -120,6 +139,8 @@ module DRbService::LDAPAuthentication
 		raise SecurityError, "authentication failure"
 
 	ensure
+		@authuser = nil
+		@authuser_branch = nil
 		@authenticated = false
 	end
 

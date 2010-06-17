@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+
+require 'drbservice'
+require 'trollop'
+
+### The DRbService generator tool.
+class DRbService::Tool
+
+	### Run the tool with the specified +args+.
+	def self::run( args )
+		opts = Trollop.options( args ) do
+			banner "Create a new drbservice"
+			version DRbService::VERSION
+		end
+
+		self.new( opts ).execute( args )
+	end
+
+
+	### Create a new instance of the tool.
+	def initialize( options )
+		@options = options
+	end
+
+
+	######
+	public
+	######
+
+	### Execute the tool with the given arguments, which should be the
+	### command-line arguments with any global options removed.
+	def execute( servicedir )
+		
+	end
+	
+
+end # class DRbService::Tool
+
+
+DRbService::Tool.run( ARGV )
+
+
+
