@@ -17,7 +17,7 @@ class DRbService
 	VERSION = '1.0.1'
 
 	# Version-control revision
-	REVISION = %$Rev$
+	REVISION = %$Revision$
 
 	# The default IP address to listen on
 	DEFAULT_IP = '127.0.0.1'
