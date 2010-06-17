@@ -6,3 +6,4 @@ experiments/.*\.pem
 ^ChangeLog$
 ^pkg/
 ^release\.(notes|ann)$
+~$
