@@ -5,9 +5,11 @@ require 'drb/ssl'
 
 
 # A base class for DRb-based services.
-# @abstract Concrete subclasses must provide define the service API by declaring 
-#   public methods. Methods declared outside of a .unguarded block will be obscured
-#   before the client authenticates.
+# @abstract Concrete subclasses must define the service API by declaring 
+#   public methods. By default, any public methods are hidden until the client 
+#   authenticates. You can optionally declare a subset of its API that is
+#   accessible before authentication by wrapping them in an 'unguarded' block. 
+# @see DRbService::unguarded
 class DRbService
 	require 'drbservice/utils'
 	include DRbUndumped,
@@ -84,7 +86,10 @@ class DRbService
 	### @return [void]
 	def self::method_added( meth )
 		super
-		unless self == ::DRbService || meth.to_sym == :initialize
+
+		unless self == ::DRbService || meth.to_sym == :initialize ||
+		       !self.public_instance_methods.include?( meth )
+
 			if self.unguarded_mode
 				DRbService.log.debug "Not obscuring %p#%s: unguarded mode." % [ self, meth ]
 			else
