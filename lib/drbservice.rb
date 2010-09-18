@@ -16,7 +16,7 @@ class DRbService
 	        DRbService::Logging
 
 	# Library version
-	VERSION = '1.0.1'
+	VERSION = '1.0.2'
 
 	# Version-control revision
 	REVISION = %$Revision$
@@ -77,6 +77,7 @@ class DRbService
 		DRbService.log.info "Starting %p as a DRbService at %s" % [ self, uri ]
 		server = DRb::DRbServer.new( uri, frontobj, config )
 		DRbService.log.debug "  started. Joining the DRb thread."
+		$0 = "%s %s" % [ self.name, uri ]
 		server.thread.join
 	end
 
@@ -87,10 +88,10 @@ class DRbService
 	def self::method_added( meth )
 		super
 
-		unless self == ::DRbService || meth.to_sym == :initialize ||
-		       !self.public_instance_methods.include?( meth )
-
-			if self.unguarded_mode
+		unless self == ::DRbService || meth.to_sym == :initialize
+			if !self.public_instance_methods.collect( &:to_sym ).include?( meth )
+				DRbService.log.debug "Not obsuring %p#%s: not a public method" % [ self, meth ]
+			elsif self.unguarded_mode
 				DRbService.log.debug "Not obscuring %p#%s: unguarded mode." % [ self, meth ]
 			else
 				DRbService.log.debug "Obscuring %p#%s." % [ self, meth ]
@@ -198,6 +199,7 @@ class DRbService
 	### set if there is a password set.
 	def method_missing( sym, *args )
 		return super unless body = self.class.real_methods[ sym ]
+
 		if self.authorized?
 			return body.clone.bind( self ).call( *args )
 		else

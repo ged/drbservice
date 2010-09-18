@@ -6,6 +6,7 @@ BEGIN {
 	basedir = Pathname( __FILE__ ).dirname.parent.parent
 	libdir = basedir + 'lib'
 
+	$LOAD_PATH.unshift( basedir.to_s ) unless $LOAD_PATH.include?( basedir.to_s )
 	$LOAD_PATH.unshift( libdir.to_s ) unless $LOAD_PATH.include?( libdir.to_s )
 }
 
@@ -137,7 +138,7 @@ describe DRbService::LDAPAuthentication do
 			end
 
 
-			it "raises an exception without calling the block on any authentication" do
+			it "raise an exception without calling the block on any authentication" do
 				block_called = false
 				expect {
 					@serviceobj.authenticate( '' ) do
@@ -147,13 +148,13 @@ describe DRbService::LDAPAuthentication do
 				block_called.should == false
 			end
 
-			it "doesn't allow access to guarded methods" do
+			it "don't allow access to guarded methods" do
 				expect {
 					@serviceobj.do_some_guarded_stuff
 				}.to raise_exception( SecurityError, /not authenticated/i )
 			end
 
-			it "allows access to unguarded methods" do
+			it "allow access to unguarded methods" do
 				@serviceobj.do_some_unguarded_stuff.should == 'Adonk.'
 			end
 
