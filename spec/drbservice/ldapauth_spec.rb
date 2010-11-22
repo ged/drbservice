@@ -11,8 +11,8 @@ BEGIN {
 }
 
 require 'treequel'
+require 'rspec'
 
-require 'spec'
 require 'spec/lib/helpers'
 
 require 'drbservice'

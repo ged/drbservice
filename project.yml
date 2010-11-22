@@ -1,28 +1,31 @@
 --- 
 excluded_pkgfiles: []
 
-project_pubdir: /usr/local/www/public/code/
-project_pubhost: deveiate.org
+project_pubdir: /usr/local/laika/www/public/gems/
+project_pubhost: havnor.adtech2.laika.com
 project_homepage: http://deveiate.org/drbservice.html
+gem_pubhost: rubygems.laika.com
 project_requirements: 
   drb: ">=0"
-release_smtphost: mail.faeriemud.org
+release_smtphost: mail.laika.com
+project_licenses: 
+- BSD
 project_description: |-
   DRbservice provides a framework for creating a DRb service that uses an SSL-encrypted channel
   and authentication with a minimum of effort, along with a tool that can easily set up the
   service in an environment intended to be run via one of several different deployment strategies.
-release_mailto: Ruby-Talk List <ruby-talk@ruby-lang.org>
-project_dependencies: 
-  trollop: ">=1.15"
+release_mailto: it@lists.laika.com
+project_dependencies: {}
+
 project_summary: A tool for easing the creation of SSL-encrypted, authenticated DRb services.
 version_file: drbservice.rb
 additional_pkgfiles: []
 
+required_ruby_version: ">= 1.8.7"
 dev_dependencies: 
-  treequel: >= 1.0.2
-
+  treequel: ~> 1.0.2
+  trollop: ~> 1.16.2
 authors: 
   Michael Granger: ged@FaerieMUD.org
-post_install_message: " \n\
-  To get started, run 'drbservice <name of service>'\n "
+post_install_message: To get started, run 'drbservice <name of service>'
 project_name: drbservice

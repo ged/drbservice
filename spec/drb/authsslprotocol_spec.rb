@@ -10,7 +10,8 @@ BEGIN {
 	$LOAD_PATH.unshift( libdir.to_s ) unless $LOAD_PATH.include?( libdir.to_s )
 }
 
-require 'spec'
+require 'rspec'
+
 require 'spec/lib/helpers'
 
 require 'drb/authsslprotocol'
