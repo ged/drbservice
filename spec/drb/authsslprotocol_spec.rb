@@ -10,18 +10,12 @@ BEGIN {
 	$LOAD_PATH.unshift( libdir.to_s ) unless $LOAD_PATH.include?( libdir.to_s )
 }
 
-require 'spec'
+require 'rspec'
 require 'spec/lib/helpers'
-
 require 'drb/authsslprotocol'
 
 
 describe DRb::DRbAuthenticatedSSLSocket do
-	include DRbService::SpecHelpers
-
-	VALID_SERVICE_URISTRING = "drbauthssl://localhost:8484"
-	VALID_SERVICE_URI = URI( VALID_SERVICE_URISTRING )
-
 
 	before( :all ) do
 		setup_logging( :fatal )

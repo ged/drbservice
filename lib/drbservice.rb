@@ -148,7 +148,7 @@ class DRbService
 	#################################################################
 
 	### Create a new instance of the service.
-	### @raise [ScriptError] if DRbService is instantiated directory
+	### @raise [ScriptError] if DRbService is instantiated directly
 	def initialize( config={} )
 		raise ScriptError,
 			"can't instantiate #{self.class} directly: please subclass it instead" if

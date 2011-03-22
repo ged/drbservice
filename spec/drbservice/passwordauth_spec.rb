@@ -12,7 +12,7 @@ BEGIN {
 
 require 'digest/sha2'
 
-require 'spec'
+require 'rspec'
 require 'spec/lib/helpers'
 
 require 'drbservice'

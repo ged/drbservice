@@ -27,6 +27,7 @@ class HomeDirService < DRbService
 		:base => 'ou=employees,dc=acme,dc=com',
 		:scope => :one
 
+	# Authorize users who are in the posixGroup called 'sysadmin' under ou=groups
 	ldap_authz_callback do |directory, bound_user|
 		sysadmin_group = directory.ou( :groups ).cn( :sysadmin )
 		return bound_user[:active] &&

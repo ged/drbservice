@@ -10,16 +10,17 @@ BEGIN {
 	$LOAD_PATH.unshift( libdir.to_s ) unless $LOAD_PATH.include?( libdir.to_s )
 }
 
-begin
-	require 'yaml'
-	require 'drbservice'
-rescue LoadError
-	unless Object.const_defined?( :Gem )
-		require 'rubygems'
-		retry
-	end
-	raise
-end
+require 'uri'
+require 'yaml'
+require 'drbservice'
+
+
+module DRbService::TestConstants
+
+	VALID_SERVICE_URISTRING = "drbauthssl://localhost:8484"
+	VALID_SERVICE_URI = URI( VALID_SERVICE_URISTRING )
+
+end # module DRbService::TestConstants
 
 
 ### RSpec helper functions.
@@ -92,6 +93,15 @@ module DRbService::SpecHelpers
 
 end
 
+### Mock with Rspec
+Rspec.configure do |c|
+	include DRbService::SpecHelpers,
+	        DRbService::TestConstants
+
+	c.mock_with :rspec
+
+	c.filter_run_excluding( :ruby_1_9_only => true ) unless vvec( RUBY_VERSION ) >= vvec('1.9.0')
+end
 
 # vim: set nosta noet ts=4 sw=4:
 
