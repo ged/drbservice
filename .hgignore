@@ -1,4 +1,4 @@
-experiments/.*\.pem
+\.pem$
 ^(ssl|drb)\.rb$
 ^commit\-msg\.txt$
 ^\.yardoc/
