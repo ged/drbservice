@@ -16,7 +16,7 @@ class DRbService
 	        DRbService::Logging
 
 	# Library version
-	VERSION = '1.0.2'
+	VERSION = '1.0.3'
 
 	# Version-control revision
 	REVISION = %$Revision$
