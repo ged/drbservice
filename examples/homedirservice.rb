@@ -3,7 +3,7 @@
 require 'fileutils'
 
 require 'drbservice'
-require 'drbservice/passwordauth'
+require 'drbservice/ldapauth'
 
 # An example service that provides functions that operate from a
 # root-trusted host to make changes to a network storage server from
