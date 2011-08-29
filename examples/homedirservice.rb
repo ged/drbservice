@@ -102,5 +102,9 @@ class HomeDirService < DRbService
 
 end # HomeDirService
 
-HomeDirService.start( '127.0.0.1', 4848, 'service-cert.pem', 'service-key' )
+HomeDirService.start(
+	:ip       => '127.0.0.1',
+	:port     => 4848, 
+	:certfile => 'service-cert.pem',
+	:keyfile  => 'service-key' )
 

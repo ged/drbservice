@@ -18,5 +18,9 @@ class RubyVersionService < DRbService
 
 end
 
-RubyVersionService.start( '127.0.0.1', 4848, 'service-cert.pem', 'service-key' )
+RubyVersionService.start( 
+	:ip       => '127.0.0.1',
+	:port     => 4848, 
+	:certfile => 'service-cert.pem',
+	:keyfile  => 'service-key' )
 
