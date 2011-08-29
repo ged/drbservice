@@ -15,12 +15,11 @@ module DRb
 		SCHEME = 'drbauthssl'
 
 
-		### Parse a drbauthssl:// URI
-		### @param [String, URI, #host, #port, #query] uri  the URI to parse
-		### @return [Array<String, Fixnum, Hash>]  The values from the URI as an Array of
-		###     the form: [ host, port, optionhash ].
-		### @raise [DRbBadScheme] if the +uri+ is not a +drbauthssl+ URI
-		### @raise [DRbBadURI] if the +uri+ is not a valid +drbauthssl+ URI
+		### Parse a drbauthssl:// URI. Accepts a String, a URI, or any object that responds to 
+		### #host, #port, and #query.
+		### Return the values from the URI as an Array of the form: [ host, port, optionhash ].
+		### Raises DRbBadScheme if the +uri+ is not a +drbauthssl+ URI.
+		### Raises DRbBadURI if the +uri+ is missing the port number.
 		def self::parse_uri( uri )
 			uri = URI( uri ) unless uri.respond_to?( :host )
 			raise DRbBadScheme, "not a #{SCHEME} URI: %p" % [ uri ] unless 

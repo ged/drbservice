@@ -1,8 +1,8 @@
 ChangeLog
-History.md
+History.rdoc
 LICENSE
 Manifest.txt
-README.md
+README.rdoc
 Rakefile
 examples/homedirservice.rb
 examples/rubyversion.rb

@@ -316,7 +316,6 @@ class DRbService
 
 		### Inclusion callback: Add logging methods and instance variables to
 		### the Module +mod+.
-		### @param [Module] mod  the including Class or Module
 		def self::included( mod )
 
 			# Logging class instance variables

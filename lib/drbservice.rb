@@ -4,12 +4,11 @@ require 'drb'
 require 'drb/ssl'
 
 
-# A base class for DRb-based services.
-# @abstract Concrete subclasses must define the service API by declaring 
-#   public methods. By default, any public methods are hidden until the client 
-#   authenticates. You can optionally declare a subset of its API that is
-#   accessible before authentication by wrapping them in an 'unguarded' block. 
-# @see DRbService::unguarded
+# A base class for DRb-based services. Concrete subclasses must define the service API by 
+# declaring public methods. By default, any public methods are hidden until the client 
+# authenticates. You can optionally declare a subset of its API that is # accessible before 
+# authentication by wrapping them in an 'unguarded' block. # See DRbService::unguarded for 
+# more details. 
 class DRbService
 	require 'drbservice/utils'
 	include DRbUndumped,
@@ -51,13 +50,14 @@ class DRbService
 	###	C L A S S   M E T H O D S
 	#################################################################
 
-	### Start the DRbService at the given +ip+ and +port+.
-	### @param [Hash] config     the service configuration hash
-	### @option config [String]  :ip       the ip to bind to
-	### @option config [Fixnum]  :port     the port to listen on
-	### @option config [String]  :certfile the name of the server's SSL certificate file
-	### @option config [String]  :keyfile  the name of the server's SSL key file
-	### @return [void]
+	### Start the DRbService, using the ip, port, and cert information from the given +config+ 
+	### hash.
+	###
+	### [:ip]       the ip to bind to
+	### [:port]     the port to listen on
+	### [:certfile] the name of the server's SSL certificate file
+	### [:keyfile]  the name of the server's SSL key file
+	### 
 	def self::start( config={} )
 		config = DEFAULT_CONFIG.merge( config )
 
@@ -82,9 +82,7 @@ class DRbService
 	end
 
 
-	### Obscure any instance method added while not in 'unguarded' mode.
-	### @param [Symbol] meth  the name of the method being added
-	### @return [void]
+	### Method-addition callback: Obscure the method +meth+ unless unguarded mode is enabled.
 	def self::method_added( meth )
 		super
 
@@ -104,8 +102,6 @@ class DRbService
 
 
 	### Inheritance callback: Add a per-class 'unguarded mode' flag to subclasses.
-	### @param [Class] subclass  the inheriting subclass
-	### @return [void]
 	def self::inherited( subclass )
 		self.log.debug "Setting @unguarded_mode in %p" % [ subclass ]
 		subclass.instance_variable_set( :@unguarded_mode, false )
@@ -115,7 +111,6 @@ class DRbService
 
 	### Declare some service methods that can be called without authentication in
 	### the provided block.
-	### @return [void]
 	def self::unguarded
 		self.unguarded_mode = true
 		yield
@@ -137,7 +132,6 @@ class DRbService
 
 		# The unguarded mode flag -- instance methods defined while this flag is set
 		# will not be hidden
-		# @return [Boolean] 
 		attr_accessor :unguarded_mode
 
 	end
@@ -148,7 +142,7 @@ class DRbService
 	#################################################################
 
 	### Create a new instance of the service.
-	### @raise [ScriptError] if DRbService is instantiated directly
+	### Raises a ScriptError if DRbService is instantiated directly.
 	def initialize( config={} )
 		raise ScriptError,
 			"can't instantiate #{self.class} directly: please subclass it instead" if

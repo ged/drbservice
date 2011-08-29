@@ -94,10 +94,10 @@ module DRbService::LDAPAuthentication
 	end
 
 
-	# @return [String] the username of the authenticated user
+	# the username of the authenticated user
 	attr_reader :authuser
 
-	# @return [Treequel::Branch] the branch of the authenticated user
+	# the Treequel::Branch of the authenticated user
 	attr_reader :authuser_branch
 
 
@@ -149,12 +149,9 @@ module DRbService::LDAPAuthentication
 	protected
 	#########
 
-	### Find the specified +username+ entry in the given +directory+.
-	### 
-	### @param [Treequel::Directory] directory  the directory to search
-	### @param [String] username                the name to use in the search
-	### 
-	### @return [Treequel::Branch, nil]  the first found user, if one was found
+	### Find the specified +username+ entry in the given +directory+, which should be a 
+	### Treequel::Directory. Returns the Treequel::Branch for the first found user, if one 
+	### was found, or +nil+ if no such user was found.
 	def find_auth_user( directory, username )
 		self.log.debug "Finding the user to bind as."
 

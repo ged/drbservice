@@ -1,8 +1,8 @@
-# drbservice
+= drbservice
 
 * https://bitbucket.org/ged/drbservice
 
-## Description
+== Description
 
 DRbService is a framework we use at LAIKA for creating authenticated
 SSL-encrypted DRb services that provide access to privileged operations
@@ -23,16 +23,16 @@ protocol. This will replace the current method-hiding code in
 quite easily. Or that's the intention.
 
 
-## Installation
+== Installation
 
     gem install drbservice
 
 
-## Contributing
+== Contributing
 
 You can check out the current development source with Mercurial via its
-[Bitbucket project][bitbucket]. Or if you prefer Git, via 
-[its Github mirror][github].
+{Bitbucket project}[https://bitbucket.org/ged/drbservice]. Or if you prefer Git, via 
+{its Github mirror}[https://github.com/ged/drbservice].
 
 After checking out the source, run:
 
@@ -42,7 +42,7 @@ This task will install any missing dependencies, run the tests/specs,
 and generate the API documentation.
 
 
-## License
+== License
 
 Copyright (c) 2010, 2011, Michael Granger
 All rights reserved.
@@ -72,6 +72,3 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-[bitbucket]: https://bitbucket.org/ged/drbservice
-[github]: https://github.com/ged/drbservice

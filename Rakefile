@@ -1,22 +1,24 @@
 #!/usr/bin/env rake
 
-require 'hoe'
+begin
+	require 'hoe'
+rescue LoadError
+	abort "This Rakefile requires 'hoe' (gem install hoe)"
+end
 
 Hoe.plugin :mercurial
-Hoe.plugin :yard
 Hoe.plugin :signing
 
 Hoe.plugins.delete :rubyforge
 
 hoespec = Hoe.spec 'drbservice' do
-	self.readme_file = 'README.md'
-	self.history_file = 'History.md'
+	self.readme_file = 'README.rdoc'
+	self.history_file = 'History.rdoc'
+	self.extra_rdoc_files << 'README.rdoc' << 'History.rdoc'
 
 	self.developer 'Michael Granger', 'ged@FaerieMUD.org'
 
-	self.extra_dev_deps.push *{
-		'rspec' => '~> 2.4',
-	}
+	self.dependency 'rspec', '~> 2.6', :developer
 
 	self.spec_extras[:licenses] = ["BSD"]
 	self.spec_extras[:post_install_message] = %{
