@@ -95,7 +95,7 @@ module DRbService::SpecHelpers
 end
 
 ### Mock with Rspec
-Rspec.configure do |c|
+RSpec.configure do |c|
 	include DRbService::SpecHelpers,
 	        DRbService::TestConstants
 
